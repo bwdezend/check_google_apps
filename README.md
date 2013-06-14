@@ -8,4 +8,3 @@ This plugin scrapes the Google Apps Status dashboard JSON object at http://www.g
 TODO:
 =====
     - switch to a real HTTP content system rather than curl
-    - better help/usage switches
