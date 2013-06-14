@@ -4,6 +4,7 @@
 #   bwdezend
 
 use JSON::PP;
+use LWP::Simple;
 use strict;
 use Getopt::Long;
 
@@ -29,7 +30,11 @@ if ($help) {
     exit 0;
 }
 
-my $content = `curl http://www.google.com/appsstatus/json/en 2>/dev/null`;
+my $url = 'http://www.google.com/appsstatus/json/en';
+
+my $content = get $url;
+die "Couldn't get $url" unless defined $content;
+
 $content =~ s/dashboard.jsonp\(//g;
 $content =~ s/\)\;$//g;
 my $parser       = new JSON::PP;
