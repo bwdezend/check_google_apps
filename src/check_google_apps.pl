@@ -13,8 +13,21 @@ my $serviceName = undef;
 my $serviceID   = undef;
 my $status      = 'OK';
 my $value       = undef;
+my $help        = undef;
+my $verbose     = undef;
+my $list        = undef;
 
-GetOptions( "service=s" => \$serviceName );
+GetOptions(
+    "service=s" => \$serviceName,
+    "verbose|v" => \$verbose,
+    "help"      => \$help,
+    "list"      => \$list,
+);
+
+if ($help) {
+    &print_help();
+    exit 0;
+}
 
 my $content = `curl http://www.google.com/appsstatus/json/en 2>/dev/null`;
 $content =~ s/dashboard.jsonp\(//g;
@@ -30,20 +43,20 @@ while ( my ( $k, $v ) = each %services ) {
     if ( $serviceName eq $v ) { $serviceID = $k }
 }
 
-unless ( defined $serviceName ) {
-    $status = "UNKNOWN";
-    &exit_with_status("No App Specified");
+if ( defined $list ) {
+    &list_apps();
+    exit 0;
 }
 
 unless ( defined $serviceID ) {
-    print "Available Google Applications:\n";
+    print "Unknown service: \"$serviceName\"\n\n";
+    &list_apps();
+    exit 0;
+}
 
-    while ( my ( $k, $v ) = each %services ) {
-        print "  $v\n";
-    }
-
+unless ( defined $serviceName ) {
     $status = "UNKNOWN";
-    &exit_with_status("Invalid App ($serviceName) Specified");
+    &exit_with_status("No App Specified");
 }
 
 foreach my $entry ( @{ $jsonResponse->{messages} } ) {
@@ -75,5 +88,32 @@ sub exit_with_status {
     if ( $status eq 'CRITICAL' ) { exit 2 }
     if ( $status eq 'WARNING' )  { exit 1 }
     if ( $status eq 'OK' )       { exit 0 }
+}
+
+sub print_help {
+    print <<HELP;
+Usage:
+ $0 -s <google apps service name> [ --verbose ] [ --help ]
+ 
+Options:
+ -h, --help
+    Print detailed help screen
+ --list
+    Print list of Google Apps
+ --verbose
+    Print extra diagnostics
+ -s, --service=<Service Name>
+
+HELP
+}
+
+sub list_apps {
+    print "Available Google Applications:\n";
+
+    while ( my ( $k, $v ) = each %services ) {
+        print "  $v\n";
+    }
+    exit 0;
+
 }
 
